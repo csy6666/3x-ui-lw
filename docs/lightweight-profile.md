@@ -36,7 +36,7 @@ package without compiling on the target VPS:
 curl -fsSL https://raw.githubusercontent.com/csy6666/3x-ui-lw/lw/mvp-protocol-whitelist/install-lw.sh | sh
 ```
 
-The installer supports Alpine `amd64` and `arm64`, verifies the SHA-256 file,
+The first release supports Alpine `amd64`, verifies the SHA-256 file,
 stores the SQLite database in `/etc/x-ui`, and registers the `x-ui-lw` OpenRC
 service. Set `XUI_LW_VERSION=lw-v0.1.0` to pin a release.
 
