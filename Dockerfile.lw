@@ -1,0 +1,39 @@
+# Lightweight Alpine image for 3x-ui-lw. It intentionally packages only the
+# panel, SQLite, and Xray. The regular Dockerfile remains the full distribution.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend
+WORKDIR /src/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --ignore-scripts
+COPY frontend/ ./
+COPY internal/web/translation /src/internal/web/translation
+ENV VITE_XUI_PROFILE=lw
+RUN npm run build
+
+FROM golang:1.27-alpine AS builder
+WORKDIR /app
+ARG TARGETARCH
+ARG XRAY_VERSION=v26.9.9
+RUN apk add --no-cache build-base curl unzip
+COPY . .
+COPY --from=frontend /src/internal/web/dist ./internal/web/dist
+ENV CGO_ENABLED=1
+ENV CGO_CFLAGS=-D_LARGEFILE64_SOURCE
+RUN go build -trimpath -ldflags "-w -s" -o build/x-ui main.go
+RUN XRAY_VERSION="$XRAY_VERSION" ./DockerInit.lw.sh "$TARGETARCH"
+
+FROM alpine:3.22
+ENV TZ=UTC \
+    XUI_IN_DOCKER=true \
+    XUI_MAIN_FOLDER=/app \
+    XUI_PROFILE=lw \
+    XUI_ENABLE_FAIL2BAN=false \
+    XUI_DB_TYPE=sqlite
+WORKDIR /app
+RUN apk add --no-cache ca-certificates tzdata
+COPY --from=builder /app/build/ /app/
+COPY --from=builder /app/DockerEntrypoint.lw.sh /app/DockerEntrypoint.sh
+COPY --from=builder /app/internal/web/translation /app/internal/web/translation
+RUN chmod 0755 /app/x-ui /app/DockerEntrypoint.sh
+EXPOSE 2053
+VOLUME ["/etc/x-ui", "/var/log/x-ui"]
+ENTRYPOINT ["/app/DockerEntrypoint.sh"]

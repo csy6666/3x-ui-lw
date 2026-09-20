@@ -50,6 +50,11 @@ import { WsStreamSettingsSchema } from '@/schemas/protocols/stream/ws';
 import { GrpcStreamSettingsSchema } from '@/schemas/protocols/stream/grpc';
 import { HttpUpgradeStreamSettingsSchema } from '@/schemas/protocols/stream/httpupgrade';
 import { XHttpStreamSettingsSchema } from '@/schemas/protocols/stream/xhttp';
+import {
+  IS_LIGHTWEIGHT_PROFILE,
+  LIGHTWEIGHT_NETWORK_OPTIONS,
+  LIGHTWEIGHT_PROTOCOL_OPTIONS,
+} from '@/lib/lw-profile';
 import { DateTimePicker } from '@/components/form';
 import { FinalMaskField } from '@/lib/xray/forms/fields';
 import './InboundFormModal.css';
@@ -97,7 +102,9 @@ const labelWithHint = (label: string, hint: string) => (
   </span>
 );
 
-const PROTOCOL_OPTIONS = Object.values(Protocols).map((p) => ({ value: p, label: p }));
+const PROTOCOL_OPTIONS = IS_LIGHTWEIGHT_PROFILE
+  ? [...LIGHTWEIGHT_PROTOCOL_OPTIONS]
+  : Object.values(Protocols).map((p) => ({ value: p, label: p }));
 const SHARE_ADDR_STRATEGIES = ['node', 'listen', 'custom'] as const;
 const SHARE_ADDR_HOSTNAME_RE =
   /^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*$/;
@@ -891,14 +898,18 @@ export default function InboundFormModal({
             style={{ width: '75%' }}
             value={network}
             onChange={onNetworkChange}
-            options={[
-              { value: 'tcp', label: 'RAW' },
-              { value: 'kcp', label: 'mKCP' },
-              { value: 'ws', label: 'WebSocket' },
-              { value: 'grpc', label: 'gRPC' },
-              { value: 'httpupgrade', label: 'HTTPUpgrade' },
-              { value: 'xhttp', label: 'XHTTP' },
-            ]}
+            options={
+              IS_LIGHTWEIGHT_PROFILE
+                ? [...LIGHTWEIGHT_NETWORK_OPTIONS]
+                : [
+                    { value: 'tcp', label: 'RAW' },
+                    { value: 'kcp', label: 'mKCP' },
+                    { value: 'ws', label: 'WebSocket' },
+                    { value: 'grpc', label: 'gRPC' },
+                    { value: 'httpupgrade', label: 'HTTPUpgrade' },
+                    { value: 'xhttp', label: 'XHTTP' },
+                  ]
+            }
           />
         </Form.Item>
       )}

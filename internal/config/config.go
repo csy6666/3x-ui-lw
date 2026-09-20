@@ -104,6 +104,14 @@ func IsDebug() bool {
 	return os.Getenv("XUI_DEBUG") == "true"
 }
 
+// IsLightweightProfile enables the low-memory distribution profile. The
+// profile is opt-in so an existing installation can use the same binary while
+// the Alpine image sets XUI_PROFILE=lw by default.
+func IsLightweightProfile() bool {
+	profile := strings.ToLower(strings.TrimSpace(os.Getenv("XUI_PROFILE")))
+	return profile == "lw" || profile == "lightweight" || os.Getenv("XUI_LW_MODE") == "true"
+}
+
 // IsSkipHSTS returns true if skipping HSTS mode is enabled via the XUI_SKIP_HSTS environment variable.
 func IsSkipHSTS() bool {
 	return os.Getenv("XUI_SKIP_HSTS") == "true"
