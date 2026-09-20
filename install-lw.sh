@@ -10,7 +10,14 @@ LOG_DIR="${XUI_LW_LOG_DIR:-/var/log/x-ui}"
 die() { echo "3x-ui-lw: $*" >&2; exit 1; }
 
 [ "$(id -u)" = 0 ] || die "run this installer as root"
-[ -f /etc/alpine-release ] || die "this installer targets Alpine Linux"
+
+if [ -f /etc/alpine-release ]; then
+  DISTRO=alpine
+elif [ -f /etc/debian_version ] && command -v apt-get >/dev/null 2>&1; then
+  DISTRO=debian
+else
+  die "unsupported distribution (supported: Alpine, Debian, Ubuntu)"
+fi
 
 case "$(uname -m)" in
   x86_64|amd64) ARCH=amd64 ;;
@@ -18,7 +25,16 @@ case "$(uname -m)" in
   *) die "unsupported architecture: $(uname -m) (supported: amd64, arm64)" ;;
 esac
 
-apk add --no-cache ca-certificates curl tar openrc >/dev/null
+case "$DISTRO" in
+  alpine)
+    apk add --no-cache ca-certificates curl tar openrc >/dev/null
+    ;;
+  debian)
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -qq ca-certificates curl tar >/dev/null
+    ;;
+esac
 
 if [ "$VERSION" = "latest" ]; then
   base="https://github.com/${REPO}/releases/latest/download"
@@ -43,21 +59,31 @@ cp -a "${tmp}/x-ui/." "$INSTALL_DIR/"
 chmod 0755 "$INSTALL_DIR/x-ui" "$INSTALL_DIR/bin/xray-linux-${ARCH}"
 
 umask 022
-cat > /etc/conf.d/x-ui-lw <<EOF
-export XUI_MAIN_FOLDER="$INSTALL_DIR"
-export XUI_BIN_FOLDER="$INSTALL_DIR/bin"
-export XUI_DB_FOLDER="$DB_DIR"
-export XUI_LOG_FOLDER="$LOG_DIR"
-export XUI_PROFILE="lw"
-export XUI_IN_DOCKER="false"
-export XUI_ENABLE_FAIL2BAN="false"
-export XUI_DB_TYPE="sqlite"
-export XUI_MEMORY_LIMIT="96"
-export XUI_GOGC="50"
-export XUI_MEMORY_RELEASE_INTERVAL="5"
-EOF
 
-cat > /etc/init.d/x-ui-lw <<'EOF'
+write_env() {
+  env_file="$1"
+  prefix=""
+  [ "$DISTRO" = alpine ] && prefix="export "
+  cat > "$env_file" <<EOF
+${prefix}XUI_MAIN_FOLDER="$INSTALL_DIR"
+${prefix}XUI_BIN_FOLDER="$INSTALL_DIR/bin"
+${prefix}XUI_DB_FOLDER="$DB_DIR"
+${prefix}XUI_LOG_FOLDER="$LOG_DIR"
+${prefix}XUI_PROFILE="lw"
+${prefix}XUI_IN_DOCKER="false"
+${prefix}XUI_ENABLE_FAIL2BAN="false"
+${prefix}XUI_DB_TYPE="sqlite"
+${prefix}XUI_MEMORY_LIMIT="96"
+${prefix}XUI_GOGC="50"
+${prefix}XUI_MEMORY_RELEASE_INTERVAL="5"
+EOF
+  chmod 0644 "$env_file"
+}
+
+case "$DISTRO" in
+  alpine)
+    write_env /etc/conf.d/x-ui-lw
+    cat > /etc/init.d/x-ui-lw <<'EOF'
 #!/sbin/openrc-run
 
 name="3x-ui-lw"
@@ -71,16 +97,45 @@ depend() {
   after firewall
 }
 EOF
-chmod 0755 /etc/init.d/x-ui-lw
+    chmod 0755 /etc/init.d/x-ui-lw
+    rc-update add x-ui-lw default >/dev/null 2>&1 || true
+    if rc-service x-ui-lw status >/dev/null 2>&1; then
+      rc-service x-ui-lw restart
+    else
+      rc-service x-ui-lw start
+    fi
+    ;;
+  debian)
+    command -v systemctl >/dev/null 2>&1 || die "systemd is required for native Debian/Ubuntu installation"
+    write_env /etc/default/x-ui-lw
+    cat > /etc/systemd/system/x-ui-lw.service <<EOF
+[Unit]
+Description=3x-ui lightweight proxy panel
+After=network-online.target
+Wants=network-online.target
 
-rc-update add x-ui-lw default >/dev/null 2>&1 || true
-if rc-service x-ui-lw status >/dev/null 2>&1; then
-  rc-service x-ui-lw restart
-else
-  rc-service x-ui-lw start
-fi
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/x-ui-lw
+WorkingDirectory=$INSTALL_DIR
+ExecStart=$INSTALL_DIR/x-ui
+ExecReload=/bin/kill -USR1 \$MAINPID
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    systemctl daemon-reload
+    systemctl enable --now x-ui-lw.service
+    ;;
+esac
 
 echo "3x-ui-lw installed."
 echo "Panel data: ${DB_DIR}"
 echo "Panel logs: ${LOG_DIR}"
-echo "Service: rc-service x-ui-lw {start|stop|restart|status}"
+if [ "$DISTRO" = alpine ]; then
+  echo "Service: rc-service x-ui-lw {start|stop|restart|status}"
+else
+  echo "Service: systemctl {start|stop|restart|status} x-ui-lw"
+fi

@@ -17,7 +17,7 @@
   <a href="https://docs.sanaei.dev"><img src="https://img.shields.io/badge/docs-docs.sanaei.dev-22d3ee" alt="Documentation"></a>
 </p>
 
-**3x-ui-lw** is a lightweight fork of [3X-UI](https://github.com/MHSanaei/3x-ui) for small Alpine Linux NAT VPS instances. It keeps the panel, SQLite storage, traffic accounting, subscriptions, and Xray management while reducing the runtime footprint for machines with about 120 MB RAM and 1 GB disk.
+**3x-ui-lw** is a lightweight fork of [3X-UI](https://github.com/MHSanaei/3x-ui) for small Alpine, Debian, and Ubuntu NAT VPS instances. It keeps the panel, SQLite storage, traffic accounting, subscriptions, and Xray management while reducing the runtime footprint for machines with about 120 MB RAM and 1 GB disk.
 
 The lightweight profile intentionally supports only the core VLESS deployments: XHTTP + TLS and WebSocket + TLS for CDN/reverse-proxy use, plus TCP + REALITY for direct anti-blocking connections. Other protocols and heavyweight sidecars are left out of this first profile.
 
@@ -30,7 +30,7 @@ The lightweight profile intentionally supports only the core VLESS deployments: 
 - **Supported inbounds** — VLESS XHTTP + TLS, VLESS WebSocket + TLS, and VLESS TCP + REALITY.
 - **Per-client management** — traffic quotas, expiry dates, IP limits, online status, share links, QR codes, and subscriptions.
 - **Traffic accounting** — inbound and per-client statistics with scheduled resets.
-- **One-line deployment** — prebuilt Alpine amd64 package with SHA256 verification and OpenRC service integration.
+- **One-line deployment** — prebuilt amd64 package with SHA256 verification and automatic OpenRC/systemd service integration.
 - **Docker option** — published image with a 120 MB memory cap and persistent SQLite/log volumes.
 
 ## Screenshots
@@ -72,7 +72,7 @@ To pin the current lightweight release:
 curl -fsSL https://raw.githubusercontent.com/csy6666/3x-ui-lw/lw/mvp-protocol-whitelist/install-lw.sh | XUI_LW_VERSION=lw-v0.1.3 sh
 ```
 
-The installer verifies the release checksum, stores data in `/etc/x-ui`, and registers the `x-ui-lw` OpenRC service. See [the lightweight profile guide](docs/lightweight-profile.md) for Docker deployment and service operations.
+The installer verifies the release checksum, stores data in `/etc/x-ui`, and registers an OpenRC service on Alpine or a systemd service on Debian/Ubuntu. See [the lightweight profile guide](docs/lightweight-profile.md) for Docker deployment and service operations.
 
 ### Unattended install
 

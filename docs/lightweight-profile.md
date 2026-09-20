@@ -1,7 +1,8 @@
 # 3x-ui-lw lightweight profile
 
-The lightweight profile is intended for small Alpine NAT VPS instances. Enable
-it with `XUI_PROFILE=lw` (the `Dockerfile.lw` image enables it by default).
+The lightweight profile is intended for small Alpine, Debian, and Ubuntu NAT
+VPS instances. Enable it with `XUI_PROFILE=lw` (the `Dockerfile.lw` image
+enables it by default).
 
 The first profile supports only these VLESS combinations:
 
@@ -27,18 +28,30 @@ these are tuning defaults, not a guarantee that an arbitrary workload fits in
 `XUI_PROFILE=lw` is enforced by the backend, so unsupported API payloads are
 rejected even if a client bypasses the reduced frontend picker.
 
-## Alpine one-line installation
+## Native one-line installation
 
-After a lightweight `lw-v*` release is published, install a prebuilt Alpine
-package without compiling on the target VPS:
+After a lightweight `lw-v*` release is published, install a prebuilt package
+without compiling on the target VPS. The installer detects Alpine, Debian, and
+Ubuntu automatically:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/csy6666/3x-ui-lw/lw/mvp-protocol-whitelist/install-lw.sh | sh
 ```
 
-The first release supports Alpine `amd64`, verifies the SHA-256 file,
-stores the SQLite database in `/etc/x-ui`, and registers the `x-ui-lw` OpenRC
-service. Set `XUI_LW_VERSION=lw-v0.1.0` to pin a release.
+The first release supports `amd64` (and the installer is ready for `arm64`
+archives when published), verifies the SHA-256 file, and stores the SQLite
+database in `/etc/x-ui`. Alpine registers an OpenRC service; Debian and Ubuntu
+register a systemd service. Set `XUI_LW_VERSION=lw-v0.1.3` to pin a release.
+
+For an IPv6-only VPS, verify that GitHub is reachable before running the
+installer:
+
+```sh
+curl -6 -I https://github.com
+```
+
+The panel and Xray listeners can use IPv6. When opening the panel directly,
+put the address in brackets, for example `http://[2001:db8::1]:2053`.
 
 For Docker deployments using the published image:
 

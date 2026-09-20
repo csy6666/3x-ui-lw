@@ -17,7 +17,7 @@
   <a href="https://docs.sanaei.dev"><img src="https://img.shields.io/badge/docs-docs.sanaei.dev-22d3ee" alt="Documentation"></a>
 </p>
 
-**3x-ui-lw** 是 [3X-UI](https://github.com/MHSanaei/3x-ui) 的轻量分支，面向低配 Alpine Linux NAT VPS。它保留面板、SQLite、流量统计、订阅和 Xray 管理能力，目标是在约 120 MB 内存、1 GB 磁盘的机器上运行。
+**3x-ui-lw** 是 [3X-UI](https://github.com/MHSanaei/3x-ui) 的轻量分支，面向低配 Alpine、Debian 和 Ubuntu NAT VPS。它保留面板、SQLite、流量统计、订阅和 Xray 管理能力，目标是在约 120 MB 内存、1 GB 磁盘的机器上运行。
 
 轻量版首期只保留三种核心 VLESS 组合：适合 CDN/反代的 XHTTP + TLS、WebSocket + TLS，以及直连抗封锁的 TCP + REALITY。其他协议和大型旁路组件暂不打包。
 
@@ -26,11 +26,11 @@
 
 ## 功能特性
 
-- **低资源占用** — Alpine 运行时，仅使用 SQLite，不包含 PostgreSQL、Fail2ban、地理库和协议旁路组件。
+- **低资源占用** — 轻量运行时，仅使用 SQLite，不包含 PostgreSQL、Fail2ban、地理库和协议旁路组件。
 - **支持的入站** — VLESS XHTTP + TLS、VLESS WebSocket + TLS、VLESS TCP + REALITY。
 - **客户端管理** — 流量配额、到期时间、IP 限制、在线状态、分享链接、二维码和订阅。
 - **流量统计** — 入站和客户端流量统计，支持定时重置。
-- **一键部署** — 预编译 Alpine amd64 包，带 SHA256 校验和 OpenRC 服务。
+- **一键部署** — 自动识别 Alpine、Debian 和 Ubuntu，带 SHA256 校验，并分别注册 OpenRC 或 systemd 服务。
 - **Docker 部署** — 已发布镜像，默认限制 120 MB 内存并持久化数据库和日志。
 
 ## 截图
