@@ -8,41 +8,30 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/MHSanaei/3x-ui/releases"><img src="https://img.shields.io/github/v/release/mhsanaei/3x-ui" alt="Release"></a>
-  <a href="https://github.com/MHSanaei/3x-ui/actions"><img src="https://img.shields.io/github/actions/workflow/status/mhsanaei/3x-ui/release.yml.svg" alt="Build"></a>
+  <a href="https://github.com/csy6666/3x-ui-lw/releases"><img src="https://img.shields.io/github/v/release/csy6666/3x-ui-lw?filter=lw-v*" alt="Release"></a>
+  <a href="https://github.com/csy6666/3x-ui-lw/actions"><img src="https://img.shields.io/github/actions/workflow/status/csy6666/3x-ui-lw/lw-release.yml.svg" alt="Build"></a>
   <a href="#"><img src="https://img.shields.io/github/go-mod/go-version/mhsanaei/3x-ui.svg" alt="GO Version"></a>
-  <a href="https://github.com/MHSanaei/3x-ui/releases/latest"><img src="https://img.shields.io/github/downloads/mhsanaei/3x-ui/total.svg" alt="Downloads"></a>
+  <a href="https://github.com/csy6666/3x-ui-lw/releases/latest"><img src="https://img.shields.io/github/downloads/csy6666/3x-ui-lw/total.svg" alt="Downloads"></a>
   <a href="https://www.gnu.org/licenses/gpl-3.0.en.html"><img src="https://img.shields.io/badge/license-GPL%20V3-blue.svg?longCache=true" alt="License"></a>
   <a href="https://pkg.go.dev/github.com/mhsanaei/3x-ui/v3"><img src="https://pkg.go.dev/badge/github.com/mhsanaei/3x-ui/v3.svg" alt="Go Reference"></a>
   <a href="https://docs.sanaei.dev"><img src="https://img.shields.io/badge/docs-docs.sanaei.dev-22d3ee" alt="Documentation"></a>
 </p>
 
-**3X-UI** is an advanced, open-source web control panel for managing [Xray-core](https://github.com/XTLS/Xray-core) servers. It provides a clean, multi-language interface for deploying, configuring, and monitoring a wide range of proxy and VPN protocols — from a single VPS to multi-node deployments.
+**3x-ui-lw** is a lightweight fork of [3X-UI](https://github.com/MHSanaei/3x-ui) for small Alpine Linux NAT VPS instances. It keeps the panel, SQLite storage, traffic accounting, subscriptions, and Xray management while reducing the runtime footprint for machines with about 120 MB RAM and 1 GB disk.
 
-Built as an enhanced fork of the original X-UI project, 3X-UI adds broader protocol support, improved stability, per-client traffic accounting, and many quality-of-life features.
+The lightweight profile intentionally supports only the core VLESS deployments: XHTTP + TLS and WebSocket + TLS for CDN/reverse-proxy use, plus TCP + REALITY for direct anti-blocking connections. Other protocols and heavyweight sidecars are left out of this first profile.
 
 > [!IMPORTANT]
 > This project is intended for personal use only. Please do not use it for illegal purposes or in a production environment.
 
 ## Features
 
-- **Multi-protocol inbounds** — VLESS, VMess, Trojan, Shadowsocks, WireGuard, AmneziaWG, TUIC v5, Hysteria2, MTProto, HTTP, SOCKS (Mixed), Dokodemo-door / Tunnel, and TUN.
-- **Modern transports & security** — TCP (Raw), mKCP, WebSocket, gRPC, HTTPUpgrade, and XHTTP, secured with TLS, XTLS, and REALITY.
-- **AmneziaWG built in** — DPI-resistant WireGuard runs inside the panel on a userspace network stack, with no kernel module, DKMS, or extra packages to install.
-- **TUIC v5 sidecar** — High-performance QUIC-based proxy with native UDP relay traffic metering, 0-RTT handshakes, and BBR congestion control.
-- **MTProto proxies** — per-client FakeTLS secrets, ad-tags, and quotas, applied live without dropping existing connections.
-- **Fallbacks** — serve multiple protocols on a single port (e.g. VLESS and Trojan on 443) using Xray's fallback support.
-- **Per-client management** — traffic quotas, expiry dates, IP limits with trusted-address exemptions, HWID device limits, scheduled renewal cycles, live online status, and one-click share links, QR codes, and subscriptions.
-- **Traffic statistics** — per inbound, per client, and per outbound, with reset controls.
-- **Multi-node support** — manage and scale across multiple servers from a single panel, including cloning inbounds onto other nodes.
-- **Outbound & routing** — WARP, NordVPN, PIA, custom routing rules, load balancers with balancer-to-balancer fallback, and outbound proxy chaining. Bundled geosite and geoip categories are browsable straight from the rule editor.
-- **Built-in subscription server** — raw, JSON, and Clash output, auto-selected from the client's User-Agent, plus [custom page templates](docs/custom-subscription-templates.md).
-- **Telegram and Discord bots** for remote monitoring and management.
-- **RESTful API** with scoped, optionally expiring tokens and an in-panel API reference.
-- **Installable panel (PWA)** — pin 3X-UI to a desktop or phone home screen.
-- **Flexible storage** — SQLite (default) or PostgreSQL.
-- **13 UI languages** with dark and light themes.
-- **Fail2ban integration** for enforcing per-client IP limits.
+- **Low footprint** — Alpine runtime, SQLite only, no PostgreSQL, Fail2ban, geodata, or protocol sidecars.
+- **Supported inbounds** — VLESS XHTTP + TLS, VLESS WebSocket + TLS, and VLESS TCP + REALITY.
+- **Per-client management** — traffic quotas, expiry dates, IP limits, online status, share links, QR codes, and subscriptions.
+- **Traffic accounting** — inbound and per-client statistics with scheduled resets.
+- **One-line deployment** — prebuilt Alpine amd64 package with SHA256 verification and OpenRC service integration.
+- **Docker option** — published image with a 120 MB memory cap and persistent SQLite/log volumes.
 
 ## Screenshots
 
@@ -74,26 +63,16 @@ Built as an enhanced fork of the original X-UI project, 3X-UI adds broader proto
 ## Quick Start
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+curl -fsSL https://raw.githubusercontent.com/csy6666/3x-ui-lw/lw/mvp-protocol-whitelist/install-lw.sh | sh
 ```
 
-To install a specific version, append its tag (e.g. `v3.7.0`):
+To pin the current lightweight release:
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) v3.7.0
+curl -fsSL https://raw.githubusercontent.com/csy6666/3x-ui-lw/lw/mvp-protocol-whitelist/install-lw.sh | XUI_LW_VERSION=lw-v0.1.3 sh
 ```
 
-To install the rolling **dev** build (latest per-commit pre-release from `main`, not a stable release), pass `dev-latest`:
-
-```bash
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) dev-latest
-```
-
-During installation a random username, password, and access path are generated. After installation, run `x-ui` to open the management menu, where you can start/stop the service, view or reset your login credentials, manage SSL certificates, and more.
-
-Every release asset is published with a `.sha256` sum next to it. Both `install.sh` and the updater verify the archive against that sum and abort on a mismatch.
-
-For full documentation — installation, configuration, operations, and the complete API reference — visit **[docs.sanaei.dev](https://docs.sanaei.dev)**.
+The installer verifies the release checksum, stores data in `/etc/x-ui`, and registers the `x-ui-lw` OpenRC service. See [the lightweight profile guide](docs/lightweight-profile.md) for Docker deployment and service operations.
 
 ### Unattended install
 
