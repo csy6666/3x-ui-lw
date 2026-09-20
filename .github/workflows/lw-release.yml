@@ -27,16 +27,16 @@ jobs:
           rm -rf release-out
           docker buildx build \
             --platform linux/${{ matrix.arch }} \
-            --target builder \
+            --target lw-package \
             --output type=local,dest=release-out \
             --file Dockerfile.lw .
       - name: Package Alpine archive
         run: |
           set -eu
-          test -x release-out/app/build/x-ui
-          test -x release-out/app/build/bin/xray-linux-${{ matrix.arch }}
+          test -x release-out/x-ui
+          test -x release-out/bin/xray-linux-${{ matrix.arch }}
           mkdir -p package/x-ui
-          cp -a release-out/app/build/. package/x-ui/
+          cp -a release-out/. package/x-ui/
           tar -czf 3x-ui-lw-linux-${{ matrix.arch }}.tar.gz -C package x-ui
           sha256sum 3x-ui-lw-linux-${{ matrix.arch }}.tar.gz > 3x-ui-lw-linux-${{ matrix.arch }}.tar.gz.sha256
       - uses: actions/upload-artifact@v4
