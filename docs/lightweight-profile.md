@@ -26,3 +26,24 @@ these are tuning defaults, not a guarantee that an arbitrary workload fits in
 
 `XUI_PROFILE=lw` is enforced by the backend, so unsupported API payloads are
 rejected even if a client bypasses the reduced frontend picker.
+
+## Alpine one-line installation
+
+After a lightweight `lw-v*` release is published, install a prebuilt Alpine
+package without compiling on the target VPS:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/csy6666/3x-ui-lw/lw/mvp-protocol-whitelist/install-lw.sh | sh
+```
+
+The installer supports Alpine `amd64` and `arm64`, verifies the SHA-256 file,
+stores the SQLite database in `/etc/x-ui`, and registers the `x-ui-lw` OpenRC
+service. Set `XUI_LW_VERSION=lw-v0.1.0` to pin a release.
+
+For Docker deployments using the published image:
+
+```sh
+mkdir -p /opt/3x-ui-lw && cd /opt/3x-ui-lw
+curl -fsSLO https://raw.githubusercontent.com/csy6666/3x-ui-lw/lw/mvp-protocol-whitelist/docker-compose.lw.yml
+docker compose -f docker-compose.lw.yml up -d
+```

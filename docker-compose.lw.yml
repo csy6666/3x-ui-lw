@@ -1,0 +1,11 @@
+services:
+  3x-ui-lw:
+    image: ghcr.io/csy6666/3x-ui-lw:latest
+    container_name: 3x-ui-lw
+    network_mode: host
+    mem_limit: 120m
+    memswap_limit: 120m
+    volumes:
+      - ./lw-data:/etc/x-ui
+      - ./lw-log:/var/log/x-ui
+    restart: unless-stopped
