@@ -17,32 +17,21 @@
   <a href="https://docs.sanaei.dev"><img src="https://img.shields.io/badge/docs-docs.sanaei.dev-22d3ee" alt="Documentation"></a>
 </p>
 
-**3X-UI** 是一个先进的开源 Web 控制面板，用于管理 [Xray-core](https://github.com/XTLS/Xray-core) 服务器。它提供简洁、多语言的界面，用于部署、配置和监控各种代理与 VPN 协议——从单台 VPS 到多节点部署。
+**3x-ui-lw** 是 [3X-UI](https://github.com/MHSanaei/3x-ui) 的轻量分支，面向低配 Alpine Linux NAT VPS。它保留面板、SQLite、流量统计、订阅和 Xray 管理能力，目标是在约 120 MB 内存、1 GB 磁盘的机器上运行。
 
-3X-UI 作为原始 X-UI 项目的增强分支（fork），增加了更广泛的协议支持、更好的稳定性、按客户端的流量统计以及许多提升使用体验的功能。
+轻量版首期只保留三种核心 VLESS 组合：适合 CDN/反代的 XHTTP + TLS、WebSocket + TLS，以及直连抗封锁的 TCP + REALITY。其他协议和大型旁路组件暂不打包。
 
 > [!IMPORTANT]
 > 本项目仅供个人使用。请勿将其用于非法目的，也请勿在生产环境中使用。
 
 ## 功能特性
 
-- **多协议入站** — VLESS、VMess、Trojan、Shadowsocks、WireGuard、AmneziaWG、TUIC v5、Hysteria2、MTProto、HTTP、SOCKS (Mixed)、Dokodemo-door / Tunnel 和 TUN。
-- **现代传输与安全** — TCP (Raw)、mKCP、WebSocket、gRPC、HTTPUpgrade 和 XHTTP，并通过 TLS、XTLS 和 REALITY 加密。
-- **内置 AmneziaWG** — 抗 DPI 的 WireGuard 直接在面板内的用户态网络栈上运行，无需内核模块、DKMS 或额外软件包。
-- **内置 TUIC v5** — 基于 QUIC 的高性能代理，支持原生 UDP 中继流量统计、0-RTT 握手和 BBR 拥塞控制。
-- **MTProto 代理** — 按客户端配置 FakeTLS 密钥、广告标签和配额，实时生效且不会断开已有连接。
-- **回落 (Fallback)** — 通过 Xray 的 fallback 功能在单个端口上提供多种协议（例如在 443 端口上同时使用 VLESS 和 Trojan）。
-- **按客户端管理** — 流量配额、到期日期、可豁免受信任地址的 IP 限制、HWID 设备数限制、定时续期周期、实时在线状态，以及一键分享链接、二维码和订阅。
-- **流量统计** — 按入站、按客户端、按出站统计，并支持重置控制。
-- **多节点支持** — 从单一面板管理并扩展到多台服务器，并可将入站克隆到其他节点。
-- **出站与路由** — WARP、NordVPN、PIA、自定义路由规则、支持均衡器间回退的负载均衡器，以及出站代理链。内置的 geosite 与 geoip 分类可直接在规则编辑器中浏览。
-- **内置订阅服务器** — 提供 raw、JSON 和 Clash 输出，可依据客户端 User-Agent 自动选择，并支持[自定义页面模板](docs/custom-subscription-templates.md)。
-- **Telegram 和 Discord 机器人**，用于远程监控和管理。
-- **RESTful API**，支持带作用域、可设置有效期的令牌，并提供面板内置的 API 参考文档。
-- **可安装面板 (PWA)** — 将 3X-UI 固定到桌面或手机主屏幕。
-- **灵活的存储** — SQLite（默认）或 PostgreSQL。
-- **13 种界面语言**，支持深色和浅色主题。
-- **Fail2ban 集成**，用于强制执行按客户端的 IP 限制。
+- **低资源占用** — Alpine 运行时，仅使用 SQLite，不包含 PostgreSQL、Fail2ban、地理库和协议旁路组件。
+- **支持的入站** — VLESS XHTTP + TLS、VLESS WebSocket + TLS、VLESS TCP + REALITY。
+- **客户端管理** — 流量配额、到期时间、IP 限制、在线状态、分享链接、二维码和订阅。
+- **流量统计** — 入站和客户端流量统计，支持定时重置。
+- **一键部署** — 预编译 Alpine amd64 包，带 SHA256 校验和 OpenRC 服务。
+- **Docker 部署** — 已发布镜像，默认限制 120 MB 内存并持久化数据库和日志。
 
 ## 截图
 
@@ -74,19 +63,18 @@
 ## 快速开始
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+curl -fsSL https://raw.githubusercontent.com/csy6666/3x-ui-lw/lw/mvp-protocol-whitelist/install-lw.sh | sh
 ```
 
-若要安装特定版本，请在命令后附加对应的标签（例如 `v3.7.0`）：
+固定当前轻量版版本：
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) v3.7.0
+curl -fsSL https://raw.githubusercontent.com/csy6666/3x-ui-lw/lw/mvp-protocol-whitelist/install-lw.sh | XUI_LW_VERSION=lw-v0.1.3 sh
 ```
 
 若要安装滚动更新的 **dev** 版本（来自 `main` 的最新逐次提交预发布版本，而非稳定版本），请传入 `dev-latest`：
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) dev-latest
 ```
 
 安装过程中会生成随机的用户名、密码和访问路径。安装完成后，运行 `x-ui` 打开管理菜单，您可以在其中启动/停止服务、查看或重置登录凭据、管理 SSL 证书等。
