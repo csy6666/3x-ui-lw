@@ -178,6 +178,10 @@ func (s *XrayService) GetXrayConfig() (*xray.Config, error) {
 	xrayConfig.API = ensureAPIServices(xrayConfig.API)
 	xrayConfig.Policy = ensureStatsPolicy(xrayConfig.Policy)
 	xrayConfig.RouterConfig = stripDisabledRules(xrayConfig.RouterConfig)
+	if config.IsLightweightProfile() {
+		xrayConfig.RouterConfig = stripLightweightGeoData(xrayConfig.RouterConfig)
+		xrayConfig.OutboundConfigs = stripLightweightGeoDataFromOutbounds(xrayConfig.OutboundConfigs)
+	}
 	// Template outbounds authored before the xray-core #6258 XHTTP rename may
 	// still carry sessionPlacement/sessionKey; lift them too (same reason as
 	// the per-inbound lift below).
@@ -1185,6 +1189,100 @@ func stripDisabledRules(routerCfg json_util.RawMessage) json_util.RawMessage {
 		return routerCfg
 	}
 	return out
+}
+
+func stripLightweightGeoData(routerCfg json_util.RawMessage) json_util.RawMessage {
+	if len(routerCfg) == 0 {
+		return routerCfg
+	}
+	var parsed map[string]any
+	if err := json.Unmarshal(routerCfg, &parsed); err != nil {
+		return routerCfg
+	}
+	rules, ok := parsed["rules"].([]any)
+	if !ok {
+		return routerCfg
+	}
+	filtered := make([]any, 0, len(rules))
+	changed := false
+	for _, rawRule := range rules {
+		rule, ok := rawRule.(map[string]any)
+		if !ok {
+			filtered = append(filtered, rawRule)
+			continue
+		}
+		if ruleUsesGeoData(rule) {
+			changed = true
+			continue
+		}
+		filtered = append(filtered, rule)
+	}
+	if !changed {
+		return routerCfg
+	}
+	parsed["rules"] = filtered
+	out, err := json.Marshal(parsed)
+	if err != nil {
+		return routerCfg
+	}
+	return out
+}
+
+func stripLightweightGeoDataFromOutbounds(raw json_util.RawMessage) json_util.RawMessage {
+	var outbounds []map[string]any
+	if err := json.Unmarshal(raw, &outbounds); err != nil {
+		return raw
+	}
+	changed := false
+	for _, outbound := range outbounds {
+		settings, ok := outbound["settings"].(map[string]any)
+		if !ok {
+			continue
+		}
+		finalRules, ok := settings["finalRules"].([]any)
+		if !ok {
+			continue
+		}
+		filtered := make([]any, 0, len(finalRules))
+		rulesChanged := false
+		for _, rawRule := range finalRules {
+			rule, ok := rawRule.(map[string]any)
+			if ok && ruleUsesGeoData(rule) {
+				rulesChanged = true
+				continue
+			}
+			filtered = append(filtered, rawRule)
+		}
+		if !rulesChanged {
+			continue
+		}
+		settings["finalRules"] = filtered
+		changed = true
+	}
+	if !changed {
+		return raw
+	}
+	updated, err := json.Marshal(outbounds)
+	if err != nil {
+		return raw
+	}
+	return updated
+}
+
+func ruleUsesGeoData(rule map[string]any) bool {
+	for _, key := range []string{"ip", "sourceIP", "domain", "sourceDomain"} {
+		values, ok := rule[key].([]any)
+		if !ok {
+			continue
+		}
+		for _, value := range values {
+			text, ok := value.(string)
+			if ok && (strings.HasPrefix(strings.ToLower(text), "geoip:") || strings.HasPrefix(strings.ToLower(text), "geosite:") || strings.HasPrefix(strings.ToLower(text), "ext:")) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // GetXrayTraffic fetches the current traffic statistics from the running Xray process.
