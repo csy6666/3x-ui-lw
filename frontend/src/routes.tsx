@@ -3,16 +3,23 @@ import { createBrowserRouter, type RouteObject } from 'react-router';
 import { Spin } from 'antd';
 
 import PanelLayout from '@/layouts/PanelLayout';
+import { IS_LIGHTWEIGHT_PROFILE } from '@/lib/lw-profile';
 
 const IndexPage = lazy(() => import('@/pages/index/IndexPage'));
 const InboundsPage = lazy(() => import('@/pages/inbounds/InboundsPage'));
 const ClientsPage = lazy(() => import('@/pages/clients/ClientsPage'));
 const GroupsPage = lazy(() => import('@/pages/groups/GroupsPage'));
-const NodesPage = lazy(() => import('@/pages/nodes/NodesPage'));
-const HostsPage = lazy(() => import('@/pages/hosts/HostsPage'));
+const NodesPage = IS_LIGHTWEIGHT_PROFILE
+  ? null
+  : lazy(() => import('@/pages/nodes/NodesPage'));
+const HostsPage = IS_LIGHTWEIGHT_PROFILE
+  ? null
+  : lazy(() => import('@/pages/hosts/HostsPage'));
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
 const XrayPage = lazy(() => import('@/pages/xray/XrayPage'));
-const ApiDocsPage = lazy(() => import('@/pages/api-docs/ApiDocsPage'));
+const ApiDocsPage = IS_LIGHTWEIGHT_PROFILE
+  ? null
+  : lazy(() => import('@/pages/api-docs/ApiDocsPage'));
 
 function withSuspense(node: React.ReactNode) {
   return (
@@ -44,13 +51,13 @@ const routes: RouteObject[] = [
       { path: 'inbounds', element: withSuspense(<InboundsPage />) },
       { path: 'clients', element: withSuspense(<ClientsPage />) },
       { path: 'groups', element: withSuspense(<GroupsPage />) },
-      { path: 'nodes', element: withSuspense(<NodesPage />) },
-      { path: 'hosts', element: withSuspense(<HostsPage />) },
+      ...(NodesPage ? [{ path: 'nodes', element: withSuspense(<NodesPage />) }] : []),
+      ...(HostsPage ? [{ path: 'hosts', element: withSuspense(<HostsPage />) }] : []),
       { path: 'settings', element: withSuspense(<SettingsPage />) },
       { path: 'xray', element: withSuspense(<XrayPage />) },
       { path: 'outbound', element: withSuspense(<XrayPage />) },
       { path: 'routing', element: withSuspense(<XrayPage />) },
-      { path: 'api-docs', element: withSuspense(<ApiDocsPage />) },
+      ...(ApiDocsPage ? [{ path: 'api-docs', element: withSuspense(<ApiDocsPage />) }] : []),
     ],
   },
 ];

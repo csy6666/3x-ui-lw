@@ -14,5 +14,15 @@ not include Fail2ban, PostgreSQL, geoip/geosite data, MTProto, TUIC, or other
 protocol sidecars. Those features remain in the normal profile and can be
 added in a later profile revision.
 
+The lw frontend route graph omits the node, host and API-doc pages, and the
+image build removes their unreachable lazy chunks (including Swagger assets).
+
+The lw runtime also skips remote-node, sidecar, WARP, outbound-refresh and
+system-monitor cron jobs. Xray health, traffic accounting, client IP-limit
+scanning and periodic traffic resets remain enabled. The image defaults to a
+96 MiB Go soft limit, `GOGC=50`, and a five-minute OS-memory release interval;
+these are tuning defaults, not a guarantee that an arbitrary workload fits in
+120 MiB including Xray and the Alpine kernel cache.
+
 `XUI_PROFILE=lw` is enforced by the backend, so unsupported API payloads are
 rejected even if a client bypasses the reduced frontend picker.

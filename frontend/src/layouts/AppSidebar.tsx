@@ -43,6 +43,7 @@ import { formatPanelVersion } from '@/lib/panel-version';
 import { pauseAnimationsUntilLeave, useTheme } from '@/hooks/useTheme';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useCommandPalette } from '@/components/command-palette/useCommandPalette';
+import { IS_LIGHTWEIGHT_PROFILE } from '@/lib/lw-profile';
 import './AppSidebar.css';
 
 const DONATE_URL = 'https://donate.sanaei.dev/';
@@ -220,20 +221,27 @@ export default function AppSidebar() {
   const panelVersion = window.X_UI_CUR_VER || '';
 
   const tabs = useMemo<{ key: string; icon: IconName; title: string }[]>(
-    () => [
+    () => {
+      const items: { key: string; icon: IconName; title: string }[] = [
       { key: '/', icon: 'dashboard', title: t('menu.dashboard') },
       { key: '/inbounds', icon: 'inbound', title: t('menu.inbounds') },
       { key: '/clients', icon: 'team', title: t('menu.clients') },
       { key: '/groups', icon: 'groups', title: t('menu.groups') },
-      { key: '/nodes', icon: 'cluster', title: t('menu.nodes') },
-      { key: '/hosts', icon: 'hosts', title: t('menu.hosts') },
-      { key: '/outbound', icon: 'outbound', title: t('menu.outbounds') },
-      { key: '/routing', icon: 'routing', title: t('menu.routing') },
       { key: '/settings', icon: 'setting', title: t('menu.settings') },
       { key: '/xray', icon: 'tool', title: t('menu.xray') },
-      { key: '/api-docs', icon: 'apidocs', title: t('menu.apiDocs') },
       { key: LOGOUT_KEY, icon: 'logout', title: t('logout') },
-    ],
+      ];
+      if (!IS_LIGHTWEIGHT_PROFILE) {
+        items.splice(4, 0,
+          { key: '/nodes', icon: 'cluster', title: t('menu.nodes') },
+          { key: '/hosts', icon: 'hosts', title: t('menu.hosts') },
+          { key: '/outbound', icon: 'outbound', title: t('menu.outbounds') },
+          { key: '/routing', icon: 'routing', title: t('menu.routing') },
+        );
+        items.splice(items.length - 1, 0, { key: '/api-docs', icon: 'apidocs', title: t('menu.apiDocs') });
+      }
+      return items;
+    },
     [t],
   );
 
@@ -252,17 +260,21 @@ export default function AppSidebar() {
         icon: <SafetyOutlined />,
         label: t('pages.settings.securitySettings'),
       },
-      {
+      ...(!IS_LIGHTWEIGHT_PROFILE
+        ? [{
         key: '/settings#telegram',
         icon: <MessageOutlined />,
         label: t('pages.settings.TGBotSettings'),
-      },
+      }]
+        : []),
       { key: '/settings#email', icon: <MailOutlined />, label: t('pages.settings.emailSettings') },
-      {
+      ...(!IS_LIGHTWEIGHT_PROFILE
+        ? [{
         key: '/settings#discord',
         icon: <DiscordOutlined />,
         label: t('pages.settings.discordSettings'),
-      },
+      }]
+        : []),
       {
         key: '/settings#subscription',
         icon: <CloudServerOutlined />,
@@ -289,9 +301,13 @@ export default function AppSidebar() {
   const xrayChildren = useMemo<NonNullable<MenuProps['items']>>(
     () => [
       { key: '/xray#basic', icon: <SettingOutlined />, label: t('pages.xray.basicTemplate') },
-      { key: '/xray#balancer', icon: <ClusterOutlined />, label: t('pages.xray.Balancers') },
       { key: '/xray#dns', icon: <DatabaseOutlined />, label: 'DNS' },
-      { key: '/xray#advanced', icon: <CodeOutlined />, label: t('pages.xray.advancedTemplate') },
+      ...(!IS_LIGHTWEIGHT_PROFILE
+        ? [
+            { key: '/xray#balancer', icon: <ClusterOutlined />, label: t('pages.xray.Balancers') },
+            { key: '/xray#advanced', icon: <CodeOutlined />, label: t('pages.xray.advancedTemplate') },
+          ]
+        : []),
     ],
     [t],
   );

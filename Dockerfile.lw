@@ -8,6 +8,7 @@ COPY frontend/ ./
 COPY internal/web/translation /src/internal/web/translation
 ENV VITE_XUI_PROFILE=lw
 RUN npm run build
+RUN node scripts/prune-lw-dist.mjs
 
 FROM golang:1.27-alpine AS builder
 WORKDIR /app
@@ -27,7 +28,10 @@ ENV TZ=UTC \
     XUI_MAIN_FOLDER=/app \
     XUI_PROFILE=lw \
     XUI_ENABLE_FAIL2BAN=false \
-    XUI_DB_TYPE=sqlite
+    XUI_DB_TYPE=sqlite \
+    XUI_MEMORY_LIMIT=96 \
+    XUI_GOGC=50 \
+    XUI_MEMORY_RELEASE_INTERVAL=5
 WORKDIR /app
 RUN apk add --no-cache ca-certificates tzdata
 COPY --from=builder /app/build/ /app/

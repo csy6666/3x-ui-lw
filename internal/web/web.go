@@ -336,6 +336,18 @@ func (s *Server) startTask(restartXray bool, loc *time.Location) {
 		_, _ = s.cron.AddJob(cadenceXrayTraffic, job.NewXrayTrafficJob())
 	}()
 
+	// The lw profile is intentionally single-node and VLESS-only. Avoid
+	// creating sidecar reconciliation, node polling, outbound refresh, remote
+	// routing and system-monitor jobs that cannot do useful work in that image.
+	if config.IsLightweightProfile() {
+		_, _ = s.cron.AddJob(cadenceClientIPScan, job.NewCheckClientIpJob())
+		_, _ = s.cron.AddJob("@hourly", job.NewPeriodicTrafficResetJob("hourly", loc))
+		_, _ = s.cron.AddJob("@daily", job.NewPeriodicTrafficResetJob("daily", loc))
+		_, _ = s.cron.AddJob("@weekly", job.NewPeriodicTrafficResetJob("weekly", loc))
+		_, _ = s.cron.AddJob("@daily", job.NewPeriodicTrafficResetJob("monthly", loc))
+		return
+	}
+
 	// Reconcile mtproto (mtg) sidecars and scrape their traffic
 	mtJob := job.NewMtprotoJob()
 	_, _ = s.cron.AddJob(cadenceMtproto, mtJob)
