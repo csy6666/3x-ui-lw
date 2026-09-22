@@ -3,7 +3,24 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const assetsDir = fileURLToPath(new URL('../../internal/web/dist/assets/', import.meta.url));
-const removedPrefixes = ['ApiDocsPage-', 'NodesPage-', 'HostsPage-', 'vendor-swagger-'];
+const removedPrefixes = [
+  'ApiDocsPage-',
+  'NodesPage-',
+  'HostsPage-',
+  'vendor-swagger-',
+  'ar-EG-',
+  'en-US-',
+  'es-ES-',
+  'fa-IR-',
+  'id-ID-',
+  'ja-JP-',
+  'pt-BR-',
+  'ru-RU-',
+  'tr-TR-',
+  'uk-UA-',
+  'vi-VN-',
+  'zh-TW-',
+];
 const removedNames = new Set();
 
 for (const name of await readdir(assetsDir)) {

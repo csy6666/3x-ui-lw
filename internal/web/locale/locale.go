@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/mhsanaei/3x-ui/v3/internal/config"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 
 	"github.com/gin-gonic/gin"
@@ -36,8 +37,11 @@ type SettingService interface {
 
 // InitLocalizer initializes the internationalization system with embedded translation files.
 func InitLocalizer(i18nFS fs.FS, settingService SettingService) error {
-	// set default bundle to English
-	i18nBundle = i18n.NewBundle(language.MustParse("en-US"))
+	defaultLang := "en-US"
+	if config.IsLightweightProfile() {
+		defaultLang = "zh-CN"
+	}
+	i18nBundle = i18n.NewBundle(language.MustParse(defaultLang))
 	i18nBundle.RegisterUnmarshalFunc("json", json.Unmarshal)
 
 	// parse files
@@ -131,6 +135,10 @@ func I18nForLang(lang string, key string, params ...string) string {
 
 // initTGBotLocalizer initializes the bot localizer with the configured language.
 func initTGBotLocalizer(settingService SettingService) error {
+	if config.IsLightweightProfile() {
+		LocalizerBot = i18n.NewLocalizer(i18nBundle, "zh-CN")
+		return nil
+	}
 	botLang, err := settingService.GetTgLang()
 	if err != nil {
 		return err
@@ -148,7 +156,11 @@ func LocalizerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Ensure bundle is initialized so creating a Localizer won't panic
 		if i18nBundle == nil {
-			i18nBundle = i18n.NewBundle(language.MustParse("en-US"))
+			defaultLang := "en-US"
+			if config.IsLightweightProfile() {
+				defaultLang = "zh-CN"
+			}
+			i18nBundle = i18n.NewBundle(language.MustParse(defaultLang))
 			i18nBundle.RegisterUnmarshalFunc("json", json.Unmarshal)
 			// Try lazy-load from disk when running sub server without InitLocalizer
 			if err := loadTranslationsFromDisk(i18nBundle); err != nil {
@@ -156,11 +168,16 @@ func LocalizerMiddleware() gin.HandlerFunc {
 			}
 		}
 		var lang string
+		if config.IsLightweightProfile() {
+			lang = "zh-CN"
+		}
 
-		if cookie, err := c.Request.Cookie("lang"); err == nil {
-			lang = cookie.Value
-		} else {
-			lang = c.GetHeader("Accept-Language")
+		if lang == "" {
+			if cookie, err := c.Request.Cookie("lang"); err == nil {
+				lang = cookie.Value
+			} else {
+				lang = c.GetHeader("Accept-Language")
+			}
 		}
 
 		LocalizerWeb = i18n.NewLocalizer(i18nBundle, lang)

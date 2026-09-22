@@ -2713,8 +2713,8 @@ func InitDB(dbPath string) error {
 			"PRAGMA busy_timeout=10000",
 			"PRAGMA synchronous=" + sync,
 			fmt.Sprintf("PRAGMA cache_size=-%d", envInt("XUI_DB_CACHE_MB", 32)*1024),
-			fmt.Sprintf("PRAGMA mmap_size=%d", int64(envInt("XUI_DB_MMAP_MB", 256))*1024*1024),
-			"PRAGMA temp_store=MEMORY",
+			fmt.Sprintf("PRAGMA mmap_size=%d", int64(envIntNonNegative("XUI_DB_MMAP_MB", 256))*1024*1024),
+			"PRAGMA temp_store=" + sqliteTempStore(),
 		}
 		for _, p := range pragmas {
 			if _, err := sqlDB.ExecContext(context.Background(), p); err != nil {
@@ -2759,6 +2759,14 @@ func InitDB(dbPath string) error {
 		return err
 	}
 	return runSeeders(isUsersEmpty)
+}
+
+func sqliteTempStore() string {
+	value := strings.ToUpper(strings.TrimSpace(os.Getenv("XUI_DB_TEMP_STORE")))
+	if value == "FILE" || value == "MEMORY" {
+		return value
+	}
+	return "MEMORY"
 }
 
 func normalizeApiTokenCreatedAtSeconds() error {
@@ -2873,6 +2881,18 @@ func envInt(key string, def int) int {
 	}
 	n, err := strconv.Atoi(v)
 	if err != nil || n <= 0 {
+		return def
+	}
+	return n
+}
+
+func envIntNonNegative(key string, def int) int {
+	v := strings.TrimSpace(os.Getenv(key))
+	if v == "" {
+		return def
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil || n < 0 {
 		return def
 	}
 	return n

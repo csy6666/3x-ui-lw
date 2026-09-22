@@ -340,7 +340,6 @@ func (s *Server) startTask(restartXray bool, loc *time.Location) {
 	// creating sidecar reconciliation, node polling, outbound refresh, remote
 	// routing and system-monitor jobs that cannot do useful work in that image.
 	if config.IsLightweightProfile() {
-		_, _ = s.cron.AddJob(cadenceClientIPScan, job.NewCheckClientIpJob())
 		_, _ = s.cron.AddJob("@hourly", job.NewPeriodicTrafficResetJob("hourly", loc))
 		_, _ = s.cron.AddJob("@daily", job.NewPeriodicTrafficResetJob("daily", loc))
 		_, _ = s.cron.AddJob("@weekly", job.NewPeriodicTrafficResetJob("weekly", loc))

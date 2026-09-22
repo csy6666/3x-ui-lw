@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/mhsanaei/3x-ui/v3/internal/config"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/entity"
@@ -84,13 +85,17 @@ func (a *ServerController) initRouter(g *gin.RouterGroup) {
 	g.POST("/clientIps", a.setClientIps)
 }
 
-// startTask registers the @2s ticker that refreshes server status, samples
+// startTask registers the status ticker that refreshes server status, samples
 // xray metrics, and pushes the new snapshot to all websocket subscribers.
 // State + sampling live in ServerService; the controller only orchestrates
 // the cross-service side effects (xrayMetrics sample + websocket broadcast).
 func (a *ServerController) startTask() {
 	c := global.GetWebServer().GetCron()
-	_, _ = c.AddFunc("@every 2s", func() {
+	statusCadence := "@every 2s"
+	if config.IsLightweightProfile() {
+		statusCadence = "@every 10s"
+	}
+	_, _ = c.AddFunc(statusCadence, func() {
 		status := a.serverService.RefreshStatus()
 		if status == nil {
 			return
